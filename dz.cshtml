@@ -1,0 +1,89 @@
+﻿@page
+@model SearchModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <input type="text" id="searchQuery" placeholder="Enter search query">
+    <button id="searchButton">Search</button>
+
+    <div id="searchResults">
+        @if (Model.Results != null && Model.Results.Any())
+        {
+            <ul>
+                @foreach (var result in Model.Results)
+                {
+                    <li>
+                        <strong>@result.Title</strong> - @result.Description
+                    </li>
+                }
+            </ul>
+        }
+        else if (Model.Query != null)
+        {
+            <p>No results found for "@Model.Query".</p>
+        }
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#searchButton').click(function () {
+                var query = $('#searchQuery').val();
+                $.ajax({
+                    url: '/Search',
+                    type: 'GET',
+                    data: { query: query },
+                    success: function (data) {
+                        $('#searchResults').html($(data).find('#searchResults').html());
+                    },
+                    error: function () {
+                        alert('Error occurred while searching.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+@functions {
+    public class SearchModel : PageModel
+    {
+        public string Query { get; set; }
+        public List<SearchResult> Results { get; set; }
+
+        public void OnGet(string query)
+        {
+            Query = query;
+            if (!string.IsNullOrEmpty(query))
+            {
+                Results = PerformSearch(query);
+            }
+        }
+
+        private List<SearchResult> PerformSearch(string query)
+        {
+            return new List<SearchResult>
+            {
+                new SearchResult { Id = 1, Title = "Result 1", Description = "Description for result 1" },
+                new SearchResult { Id = 2, Title = "Result 2", Description = "Description for result 2" }
+            };
+        }
+
+        public class SearchResult
+        {
+            public int Id { get; set; }
+            public string Title { get; set; }
+            public string Description { get; set; }
+        }
+    }
+}
